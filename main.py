@@ -42,3 +42,36 @@ for year in range(10):
     print(teams_points[["tmID", "name", "year", "O_PPG"]])
     print("////////////////////--------------------------------/////////////////////////////////")
 
+
+def clean_players():
+    players.drop('firstseason', axis='columns') # all players with first and last season 0
+    players.drop('lastseason', axis='columns')
+    players = players[players["bioID"].isin(players_teams["playerID"])]
+
+def clean_players_teams():
+    players_teams.drop('lgID', axis='columns') # same lgID
+
+def clean_awards_players():
+    awards_players.drop("lgID", axis="columns")
+
+def clean_coaches():
+    coaches.drop("lgID", axis="columns")
+
+def clean_teams_post():
+    teams_post.drop("lgID", axis="columns")
+
+def clean_series_post():
+    series_post.drop("lgIDWinner", axis="columns")
+    series_post.drop("lgIDLoser", axis="columns")
+
+def clean_teams():
+    teams.drop("tmID", axis="columns")
+    teams.drop("arena", axis="columns")
+    teams.drop("attend", axis="columns")
+    teams.drop("min", axis="columns")
+    teams.drop("seeded", axis="columns")
+    teams.drop("name", axis="columns")
+
+dead_players = players[players['deathDate'] != '0000-00-00'] # players that are dead
+
+
