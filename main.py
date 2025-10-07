@@ -1,37 +1,43 @@
-import numpy
-import pandas
+import parsing
 
-awards_players = pandas.read_csv("basketballPlayoffs/awards_players.csv")
-coaches = pandas.read_csv("basketballPlayoffs/coaches.csv")
-players_teams = pandas.read_csv("basketballPlayoffs/players_teams.csv")
-players = pandas.read_csv("basketballPlayoffs/players.csv")
-series_post = pandas.read_csv("basketballPlayoffs/series_post.csv")
-teams_post = pandas.read_csv("basketballPlayoffs/teams_post.csv")
-teams = pandas.read_csv("basketballPlayoffs/teams.csv")
+from parsing import (
+    parse_player_team_data,
+    parse_all_data,
+    clean_players,
+    clean_players_teams,
+    clean_awards_players,
+    clean_coaches,
+    clean_teams_post,
+    clean_series_post,
+    clean_teams
+)
 
-# players_teams_Y1 = players_teams[players_teams["year"] == 1]
+if __name__ == "__main__":
+    base_path = "C:\\Users\\up201\Documents\\AC\\basketballPlayoffs"
 
-# players_points = players_teams_Y1[players_teams_Y1["GP"] > 0]
-# players_teams["PPG"] = (players_points["points"] / players_points["GP"]).round(1)
+    # Load everything
+    data = parse_all_data(base_path)
 
-# ppg_sorted = players_teams.sort_values(by="PPG", ascending=False)
+    # Clean data
+    data["players"] = clean_players(data["players"], data["players_teams"])
+    data["players_teams"] = clean_players_teams(data["players_teams"])
+    data["awards_players"] = clean_awards_players(data["awards_players"])
+    data["coaches"] = clean_coaches(data["coaches"])
+    data["teams_post"] = clean_teams_post(data["teams_post"])
+    data["series_post"] = clean_series_post(data["series_post"])
+    data["teams"] = clean_teams(data["teams"])
 
-# print(ppg_sorted[["playerID", "PPG", "GP", "year"]].head(10))
-# print(ppg_sorted)
-# print("///////////////////--------------------------------/////////////////////////////////")
+    # Example: derived metric
+    data["teams"]["O_PPG"] = data["teams"]["o_pts"] / data["teams"]["GP"]
 
-# all_teams = teams[teams["year"] == 1]
-# all_teams_sorted = all_teams.sort_values(by="won", ascending=False)
-# print(all_teams_sorted[["tmID", "rank", "playoff", "won", "lost"]])
+    for year in sorted(data["teams"]["year"].unique()):
+        print(f"\n=== Year {year} ===")
+        year_teams = data["teams"][data["teams"]["year"] == year]
+        teams_sorted = year_teams.sort_values(by="O_PPG", ascending=False)
+        print(teams_sorted[["tmID", "name", "year", "O_PPG"]].head())
 
-# print("///////////////////--------------------------------/////////////////////////////////")
+    print("\n Parsing and cleaning complete.")
 
-# winner = series_post[series_post["round"] == "F"]
-# print(winner[["year", "tmIDWinner"]])
-
-# teams_1 = teams[teams["year"] == 1]
-
-# print(teams_1[["confID"]])
 
 teams["O_PPG"] = teams["o_pts"] / teams["GP"]
 
