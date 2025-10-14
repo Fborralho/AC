@@ -1,13 +1,35 @@
 import pandas as pd
 from collections import defaultdict
 
-def parse_player_team_data(filepath):
+def clean_players(players: pd.DataFrame):
+    players = players.drop(['firstseason','lastseason'], axis='columns') # all players with first and last season 0
+    players = players[players["bioID"].isin(players_teams["playerID"])]
+    return players
+
+def clean_players_teams(players_teams: pd.DataFrame):
+    return players_teams.drop('lgID', axis='columns') # same lgID
+
+def clean_awards_players(awards_players: pd.DataFrame):
+    return awards_players.drop("lgID", axis="columns")
+
+def clean_coaches(coaches: pd.DataFrame):
+    return coaches.drop("lgID", axis="columns")
+
+def clean_teams_post(teams_post : pd.DataFrame):
+    return teams_post.drop("lgID", axis="columns")
+
+def clean_series_post(series_post : pd.DataFrame):
+    return series_post.drop(["lgIDLoser", "lgIDWinner"], axis="columns")
+
+def clean_teams(teams : pd.DataFrame):
+    return teams.drop(["lgID", "franchID", "divID", "arena", "attend", "min", "seeded", "name"], axis="columns")
+
+def parse_player_team_data(df):
     """
     Parses the player-team-season dataset into structured Python dictionaries
     for further analysis and championship prediction.
     """
-    # Step 1: Load and clean CSV
-    df = pd.read_csv(filepath)
+    # Step 1: Clean CSV
     df.columns = [c.strip() for c in df.columns]  # Clean column names
     df.fillna(0, inplace=True)
 
@@ -70,7 +92,6 @@ def parse_player_team_data(filepath):
         record = {
             "year": year,
             "teamID": teamID,
-            "league": row["lgID"],
             "stint": row["stint"],
             **season_stats,
             **postseason_stats
@@ -83,27 +104,34 @@ def parse_player_team_data(filepath):
     print(f"Parsed {len(players)} players across {len(teams_by_year)} seasons.")
     return {"players": players, "teams_by_year": teams_by_year}
 
+def create_points_per_game_column():
+    teams["O_PPG"] = teams["o_pts"] / teams["GP"]
+    return teams
+
 
 if __name__ == "__main__":
-    filepath = "C:\\Users\\up201\\Documents\\AC\\basketballPlayoffs\\players_teams.csv"
 
-    data = parse_player_team_data(filepath)
+    awards_players = clean_awards_players(pd.read_csv("basketballPlayoffs/awards_players.csv"))
+    coaches = clean_coaches(pd.read_csv("basketballPlayoffs/coaches.csv"))
+    players_teams = clean_players_teams(pd.read_csv("basketballPlayoffs/players_teams.csv"))
+    players = clean_players(pd.read_csv("basketballPlayoffs/players.csv"))
+    series_post = clean_series_post(pd.read_csv("basketballPlayoffs/series_post.csv"))
+    teams_post = clean_teams_post(pd.read_csv("basketballPlayoffs/teams_post.csv"))
+    teams = clean_teams(pd.read_csv("basketballPlayoffs/teams.csv"))
 
+    dead_players = players[players['deathDate'] != '0000-00-00'] # players that are dead
+    players_teams_data = parse_player_team_data(players_teams)
+
+    teams = create_points_per_game_column()
     
-    for year, teams in data["teams_by_year"].items():
-        print(f"\n=== {year} ===")
-        for team, players in teams.items():
-            total_points = sum(p["points"] for p in players)
-            print(f"{team}: {total_points:.0f} total points")
+    # for year, teams in players_teams_data["teams_by_year"].items():
+    #     print(f"\n=== {year} ===")
+    #     for team, players in teams.items():
+    #         total_points = sum(p["points"] for p in players)
+    #         print(f"{team}: {total_points:.0f} total points")
 
 
-awards_players = pandas.read_csv("basketballPlayoffs/awards_players.csv")
-coaches = pandas.read_csv("basketballPlayoffs/coaches.csv")
-players_teams = pandas.read_csv("basketballPlayoffs/players_teams.csv")
-players = pandas.read_csv("basketballPlayoffs/players.csv")
-series_post = pandas.read_csv("basketballPlayoffs/series_post.csv")
-teams_post = pandas.read_csv("basketballPlayoffs/teams_post.csv")
-teams = pandas.read_csv("basketballPlayoffs/teams.csv")
+
 
 # players_teams_Y1 = players_teams[players_teams["year"] == 1]
 
@@ -129,45 +157,11 @@ teams = pandas.read_csv("basketballPlayoffs/teams.csv")
 
 # print(teams_1[["confID"]])
 
-teams["O_PPG"] = teams["o_pts"] / teams["GP"]
-
-for year in range(10):
-    print(f"Year: {year}")
-    year_teams = teams[teams["year"] == year]
-    teams_points = year_teams.sort_values(by="O_PPG", ascending=False)
-    print(teams_points[["tmID", "name", "year", "O_PPG"]])
-    print("////////////////////--------------------------------/////////////////////////////////")
-
-
-def clean_players():
-    players.drop('firstseason', axis='columns') # all players with first and last season 0
-    players.drop('lastseason', axis='columns')
-    players = players[players["bioID"].isin(players_teams["playerID"])]
-
-def clean_players_teams():
-    players_teams.drop('lgID', axis='columns') # same lgID
-
-def clean_awards_players():
-    awards_players.drop("lgID", axis="columns")
-
-def clean_coaches():
-    coaches.drop("lgID", axis="columns")
-
-def clean_teams_post():
-    teams_post.drop("lgID", axis="columns")
-
-def clean_series_post():
-    series_post.drop("lgIDWinner", axis="columns")
-    series_post.drop("lgIDLoser", axis="columns")
-
-def clean_teams():
-    teams.drop("tmID", axis="columns")
-    teams.drop("arena", axis="columns")
-    teams.drop("attend", axis="columns")
-    teams.drop("min", axis="columns")
-    teams.drop("seeded", axis="columns")
-    teams.drop("name", axis="columns")
-
-dead_players = players[players['deathDate'] != '0000-00-00'] # players that are dead
+    # for year in range(10):
+    #     print(f"Year: {year}")
+    #     year_teams = teams[teams["year"] == year]
+    #     teams_points = year_teams.sort_values(by="O_PPG", ascending=False)
+    #     print(teams_points[["tmID", "name", "year", "O_PPG"]])
+    #     print("////////////////////--------------------------------/////////////////////////////////")
 
 
