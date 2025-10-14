@@ -1,4 +1,5 @@
 import pandas as pd
+from create_test_and_training_set import create_test_set_data
 from collections import defaultdict
 
 def clean_players(players: pd.DataFrame):
@@ -22,7 +23,7 @@ def clean_series_post(series_post : pd.DataFrame):
     return series_post.drop(["lgIDLoser", "lgIDWinner"], axis="columns")
 
 def clean_teams(teams : pd.DataFrame):
-    return teams.drop(["lgID", "franchID", "divID", "arena", "attend", "min", "seeded", "name"], axis="columns")
+    return teams.drop(["lgID", "franchID", "divID", "arena", "attend", "min", "name"], axis="columns")
 
 def parse_player_team_data(df):
     """
@@ -119,10 +120,13 @@ if __name__ == "__main__":
     teams_post = clean_teams_post(pd.read_csv("basketballPlayoffs/teams_post.csv"))
     teams = clean_teams(pd.read_csv("basketballPlayoffs/teams.csv"))
 
-    dead_players = players[players['deathDate'] != '0000-00-00'] # players that are dead
-    players_teams_data = parse_player_team_data(players_teams)
+    test_players_teams, test_teams, test_coaches = create_test_set_data(10, coaches, teams, players_teams)
 
-    teams = create_points_per_game_column()
+
+    # dead_players = players[players['deathDate'] != '0000-00-00'] # players that are dead
+    # players_teams_data = parse_player_team_data(players_teams)
+
+    # teams = create_points_per_game_column()
     
     # for year, teams in players_teams_data["teams_by_year"].items():
     #     print(f"\n=== {year} ===")
